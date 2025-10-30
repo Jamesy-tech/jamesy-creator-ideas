@@ -1,19 +1,246 @@
-const title = document.getElementById('title');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ideas | Jamesy Creator</title>
+<link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" href="icon.png">
+<style>
+  * {
+    font-family: "Mulish", sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 
-// Load saved title on page load
+  body {
+    background: #ffffff;
+    color: #222;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height:100vh;
+    padding: 100px 20px 100px;
+  }
+
+  @media (max-height: 500px) {
+    body {
+      padding-top:60px;
+    }
+  }
+
+  @media (max-height: 300px) {
+    body {
+      padding-top:40px;
+    }
+  }
+
+  h1 {
+    font-weight: 700;
+    color: #202020;
+    margin-bottom: 24px;
+  }
+
+  #inputBox {
+    width: 100%;
+    max-width: 600px;
+    background: #f2f2f2;
+    color: #111;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 16px;
+    outline: none;
+    transition: background 0.2s;
+  }
+
+  #inputBox:focus {
+
+  }
+
+ #cards {
+  width: 100%;
+  max-width: 600px;
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+
+.card {
+  background: var(--card-color);
+  padding: 14px 50px 14px 16px;
+  border-radius: 6px;
+  color: #111;
+  transition: background 0.2s ease;
+  position: relative;
+  word-break: break-word;
+  white-space: pre-wrap;
+  min-height: 70px;
+}
+
+.delete-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.delete-btn:hover {
+  color: #e43f3f;
+}
+
+
+
+  @keyframes slideIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+#ideasList {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 13px;
+  background: #f4f4f4;
+  color: #333;
+  padding: 8px 14px;
+  border-radius: 6px;
+  opacity: 0.95;
+  white-space: nowrap;
+  min-width: 250px;
+  text-align: center;
+  z-index: 1000;
+}
+
+#title {
+  outline:none;
+}
+
+  #ideasList[contenteditable="true"]:focus {
+    outline: 1px solid #bbb;
+    background: #fff;
+  }
+</style>
+</head>
+<body>
+  <h1 contenteditable="true" id="title">Ideas</h1>
+  <input type="text" id="inputBox" placeholder="Type something and press Enter..." autocomplete="off">
+  <div id="cards"></div>
+  <div id="ideasList" contenteditable="true">[]</div>
+
+  <script>
+    const inputBox = document.getElementById('inputBox');
+    const cardsContainer = document.getElementById('cards');
+    const ideasList = document.getElementById('ideasList');
+
+const pastelColors = [
+  '#FFD6E8',
+  '#FFE8A3',
+  '#D3F8E2', 
+  '#D0E6FF',
+  '#E6CCFF',
+  '#C8FFD4',
+  '#FFF3B0',
+  '#FFC9C9',  
+  '#B5EAEA', 
+  '#FFDEB4'
+];
+
+
+    function randomColor() {
+      return pastelColors[Math.floor(Math.random() * pastelColors.length)];
+    }
+
+    function updateIdeasList() {
+      const ideas = Array.from(cardsContainer.children).map(card => card.querySelector('.text').textContent);
+      ideasList.textContent = JSON.stringify(ideas);
+    }
+
+    function saveNotes() {
+      const notes = Array.from(cardsContainer.children).map(card => card.querySelector('.text').textContent);
+      localStorage.setItem('flowNotes', JSON.stringify(notes));
+      updateIdeasList();
+    }
+
+    function addCard(text, save = true) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.setProperty('--card-color', randomColor());
+
+      const textEl = document.createElement('span');
+      textEl.className = 'text';
+      textEl.textContent = text;
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = '✕';
+      delBtn.onclick = () => {
+        card.remove();
+        saveNotes();
+      };
+
+      card.appendChild(textEl);
+      card.appendChild(delBtn);
+      cardsContainer.appendChild(card);
+      if (save) saveNotes();
+    }
+
+    inputBox.addEventListener('keypress', e => {
+      if (e.key === 'Enter' && inputBox.value.trim() !== '') {
+        e.preventDefault();
+        addCard(inputBox.value.trim());
+        inputBox.value = '';
+      }
+    });
+
+    const title = document.getElementById('title');
+
 window.addEventListener('load', () => {
   const savedTitle = localStorage.getItem('flowTitle');
   if (savedTitle) title.textContent = savedTitle;
 });
 
-// Save title whenever it loses focus
 title.addEventListener('blur', () => {
   localStorage.setItem('flowTitle', title.textContent.trim());
 });
 
-// Optional: save title while typing (on Enter or keyup)
 title.addEventListener('keyup', (e) => {
   if (e.key === 'Enter') {
     title.blur();
   }
 });
+
+
+    ideasList.addEventListener('blur', () => {
+      try {
+        const parsed = JSON.parse(ideasList.textContent);
+        if (Array.isArray(parsed)) {
+          cardsContainer.innerHTML = '';
+          parsed.forEach(text => addCard(text, false));
+          saveNotes();
+        }
+      } catch {
+        updateIdeasList();
+      }
+    });
+
+    window.addEventListener('load', () => {
+      const saved = JSON.parse(localStorage.getItem('flowNotes') || '[]');
+      saved.forEach(text => addCard(text, false));
+      updateIdeasList();
+    });
+  </script>
+</body>
+</html>
