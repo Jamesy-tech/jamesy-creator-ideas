@@ -1,0 +1,19 @@
+const title = document.getElementById('title');
+
+// Load saved title on page load
+window.addEventListener('load', () => {
+  const savedTitle = localStorage.getItem('flowTitle');
+  if (savedTitle) title.textContent = savedTitle;
+});
+
+// Save title whenever it loses focus
+title.addEventListener('blur', () => {
+  localStorage.setItem('flowTitle', title.textContent.trim());
+});
+
+// Optional: save title while typing (on Enter or keyup)
+title.addEventListener('keyup', (e) => {
+  if (e.key === 'Enter') {
+    title.blur();
+  }
+});
